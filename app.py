@@ -20,3 +20,14 @@ model = st.sidebar.selectbox(
 )
 st.sidebar.markdown('### About')
 st.sidebar.markdown('This applicattion is a stock assistant!')
+
+st.write('Ask anything about the stock: ')
+user_question = st.text_input('Write your question...')
+send_button = st.button('Send')
+
+if send_button:
+    if user_question:
+        st.write('Asked a question')
+    
+    else:
+        st.warning('Ask the agent a question!')
