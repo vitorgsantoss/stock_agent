@@ -1,10 +1,8 @@
 
 from dotenv import load_dotenv
-from langchain import hub
 from langchain.prompts import PromptTemplate
-from langchain.agents import create_react_agent, AgentExecutor
+from langchain_community.agent_toolkits.sql.base import create_sql_agent
 from langchain_community.utilities.sql_database import SQLDatabase
-from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 from langchain_openai import ChatOpenAI
 import streamlit as st
 
@@ -14,7 +12,7 @@ st.set_page_config(
     page_icon='assets/stock.png',
     page_title='Stock Assistant'
 )
-st.header('I am a Stock Assistant')
+st.header('📦 I am a Stock Assistant')
 
 options = [
     'gpt-3.5-turbo',
@@ -32,22 +30,12 @@ question = st.text_input('Ask a question about the stock:')
 model = ChatOpenAI(model= selected_model)
 
 db = SQLDatabase.from_uri('sqlite:///estoque.db')
-db_toolkit = SQLDatabaseToolkit(
+
+
+agent = create_sql_agent(
     db=db,
-    llm=model
-)
-
-system_message = hub.pull('hwchase17/react')
-
-agent = create_react_agent(
-    tools= db_toolkit.get_tools(),
     llm=model,
-    prompt=system_message
-)
-db_agent = AgentExecutor(
-    tools=db_toolkit.get_tools(),
-    agent = agent,
-    handle_parsing_errors=True
+    agent_type='tool-calling'
 )
 
 prompt = '''
@@ -63,7 +51,7 @@ prompt_template = PromptTemplate.from_template(prompt)
 if st.button('Send'):
     if question:
         with st.spinner('Generating the answer'):
-            response = db_agent.invoke(
+            response = agent.invoke(
                 {
                     'input': prompt.format(q=question)
                 }
